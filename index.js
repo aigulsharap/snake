@@ -1,120 +1,125 @@
-const game = {
-    snake: {
-        x: 1,
-        y: 1,
-        tail: [],
-        speed: 1,
-        direction: 'right',
-        grow() {
-            game.snake.tail.push({ x: game.snake.x, y: game.snake.y })
-        },
-        refreshTail() {
-            game.snake.tail.splice(0, 1)
-            game.snake.grow()
+class Snake {
+    constructor(settings) {
+        this.snake = {
+            x: 1,
+            y: 1,
+            tail: [],
+            speed: settings?.speed || 1,
+            direction: 'right',
         }
-    },
-    food: {
-        x: 5,
-        y: 5,
-    },
-    score: 0,
-    rows: 10,
-    cols: 10,
-    field: document.querySelector('.field'),
-    scoreEl: document.querySelector('.score'),
+        this.food = {
+            x: 5,
+            y: 5,
+        }
+        this.score = 0
+        this.rows = settings?.rows || 10
+        this.cols = settings?.cols || 10
+        this.field = document.querySelector('.field')
+        this.scoreEl = document.querySelector('.score')
+        this.intervalId = null
+    }
+    grow() {
+        this.snake.tail.push({ x: this.snake.x, y: this.snake.y })
+    }
+    refreshTail() {
+        this.snake.tail.splice(0, 1)
+        this.grow()
+    }
     placeFood() {
-        game.food.x = game.randomInteger(1, game.cols)
-        game.food.y = game.randomInteger(1, game.rows)
-        if (game.food.x === game.snake.x && game.food.y === game.snake.y) {
-            game.placeFood()
+        this.food.x = this.randomInteger(1, this.cols)
+        this.food.y = this.randomInteger(1, this.rows)
+        if (this.food.x === this.snake.x && this.food.y === this.snake.y) {
+            this.placeFood()
         }
-    },
+    }
     randomInteger(min, max) {
         let rand = min - 0.5 + Math.random() * (max - min + 1);
         return Math.round(rand);
-    },
+    }
     drawSnake() {
-        game.snake.tail.forEach((tailPart) => {
-            game.paintCell(tailPart, 'tail')
+        this.snake.tail.forEach((tailPart) => {
+            this.paintCell(tailPart, 'tail')
         })
-        game.paintCell(game.snake, 'snake-head')
-    },
+        this.paintCell(this.snake, 'snake-head')
+    }
     drawFood() {
-        game.paintCell(game.food, 'food')
-    },
+        this.paintCell(this.food, 'food')
+    }
     render() {
         let field = ''
-        for (let i = 1; i <= game.rows; i++) {
+        for (let i = 1; i <= this.rows; i++) {
             let cells = ''
-            for (let j = 1; j <= game.cols; j++) {
+            for (let j = 1; j <= this.cols; j++) {
                 cells += `<div class="cell" data-col="${j}" data-row="${i}"></div>`
             }
             field += `<div class="row">${cells}</div>`
         }
-        game.field.innerHTML = field
-        game.drawSnake()
-        game.drawFood()
-    },
+        this.field.innerHTML = field
+        this.drawSnake()
+        this.drawFood()
+    }
     paintCell(coords, className) {
         const cell = document.querySelector(`[data-col="${coords.x}"][data-row="${coords.y}"]`)
         cell.classList.add(className)
-    },
-    intervalId: null,
+    }
     listenEvents() {
-        document.addEventListener('keydown', e => {
+        document.addEventListener('keydown', (e) => {
             switch (e.key) {
                 case 'ArrowUp':
-                    game.snake.direction = 'up'
+                    this.snake.direction = 'up'
                     break
                 case 'ArrowDown':
-                    game.snake.direction = 'down'
+                    this.snake.direction = 'down'
                     break
                 case 'ArrowRight':
-                    game.snake.direction = 'right'
+                    this.snake.direction = 'right'
                     break
                 case 'ArrowLeft':
-                    game.snake.direction = 'left'
+                    this.snake.direction = 'left'
                     break
             }
         })
-    },
-    makeStep() {
-        switch (game.snake.direction) {
+    }
+    updateCoords() {
+        switch (this.snake.direction) {
             case 'up':
-                game.snake.y--
+                this.snake.y--
                 break
             case 'down':
-                game.snake.y++
+                this.snake.y++
                 break
             case 'right':
-                game.snake.x++
+                this.snake.x++
                 break
             case 'left':
-                game.snake.x--
+                this.snake.x--
                 break
         }
-        game.check()
-        game.render()
-    },
+        this.makeStep()
+    }
     start() {
-        game.placeFood()
-        game.render()
-        game.listenEvents()
-        game.intervalId = setInterval(game.makeStep, 1000 / game.snake.speed)
-    },
-    check() {
-        if (game.snake.x > game.cols || game.snake.x <= 0 || game.snake.y > game.rows || game.snake.y <= 0) {
-            clearInterval(game.intervalId)
-            game.scoreEl.innerHTML = 'Game over'
-        } else if (game.snake.x === game.food.x && game.snake.y === game.food.y) {
-            game.placeFood()
-            game.score++
-            game.scoreEl.innerHTML = `Счёт: ${game.score}`
-            game.snake.grow()
+        this.placeFood()
+        this.render()
+        this.listenEvents()
+        this.intervalId = setInterval(this.updateCoords.bind(this), 1000 / this.snake.speed)
+    }
+    makeStep() {
+        if (this.snake.x > this.cols || this.snake.x <= 0 || this.snake.y > this.rows || this.snake.y <= 0) {
+            clearInterval(this.intervalId)
+            this.scoreEl.innerHTML = 'Game over'
+        } else if (this.snake.x === this.food.x && this.snake.y === this.food.y) {
+            this.placeFood()
+            this.score++
+            this.scoreEl.innerHTML = `Счёт: ${this.score}`
+            this.grow()
+            this.render()
         } else {
-            game.snake.refreshTail()
+            this.refreshTail()
+            this.render()
         }
-    },
-};
+    }
+}
+
+const game = new Snake()
 
 game.start()
