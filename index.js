@@ -1,5 +1,5 @@
 class Snake {
-    constructor(settings) {
+    constructor(root, settings) {
         this.snake = {
             x: 1,
             y: 1,
@@ -14,9 +14,38 @@ class Snake {
         this.score = 0
         this.rows = settings?.rows || 10
         this.cols = settings?.cols || 10
-        this.field = document.querySelector('.field')
-        this.scoreEl = document.querySelector('.score')
         this.intervalId = null
+        this.mount(root)
+    }
+    mount(root) {
+        const rootEl = document.querySelector(root)
+        rootEl.append(this.createButton())
+        rootEl.append(this.renderScore())
+        rootEl.append(this.createField())
+        this.render()
+    }
+    createField() {
+        const field = document.createElement('div')
+        field.className = 'field'
+        this.field = field
+        return this.field
+    }
+    createButton() {
+        const button = document.createElement('button')
+        button.className = 'button'
+        button.textContent = 'Старт'
+        button.addEventListener('click', this.start.bind(this))
+        this.button = button
+        return button
+    }
+    renderScore() {
+        if (!this.scoreEl) {
+            const score = document.createElement('h1')
+            score.className = 'score'
+            this.scoreEl = score
+        }
+        this.scoreEl.innerHTML = `Счёт: ${this.score}`
+        return this.scoreEl
     }
     grow() {
         this.snake.tail.push({ x: this.snake.x, y: this.snake.y })
@@ -98,9 +127,19 @@ class Snake {
         this.makeStep()
     }
     start() {
+        this.snake.x = 1
+        this.snake.y = 1
+        this.snake.tail = []
+        this.food = {
+            x: 5,
+            y: 5,
+        }
+        this.score = 0
+        this.scoreEl.innerHTML = `Счёт: ${this.score}`
         this.placeFood()
         this.render()
         this.listenEvents()
+        clearInterval(this.intervalId)
         this.intervalId = setInterval(this.updateCoords.bind(this), 1000 / this.snake.speed)
     }
     makeStep() {
@@ -120,6 +159,5 @@ class Snake {
     }
 }
 
-const game = new Snake()
+const game = new Snake('#app', {})
 
-game.start()
